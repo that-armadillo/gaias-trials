@@ -167,73 +167,106 @@ type ElementalInsight = {
   note: string
 }
 
+function getTemperatureEmoji(temp: number): string {
+  if (temp >= 30) return '🔥'
+  if (temp >= 20) return '🌞'
+  if (temp >= 10) return '🌤️'
+  if (temp >= 0) return '🌥️'
+  return '❄️'
+}
+
+function getConditionEmoji(conditions: string): string {
+  const condition = conditions.toLowerCase()
+  if (condition.includes('storm') || condition.includes('thunder')) return '⛈️'
+  if (condition.includes('drizzle') || condition.includes('rain')) return '🌧️'
+  if (condition.includes('snow')) return '❄️'
+  if (condition.includes('wind')) return '💨'
+  if (condition.includes('cloud')) return '☁️'
+  if (condition.includes('sun') || condition.includes('clear')) return '☀️'
+  return '🌍'
+}
+
+function getWindEmoji(speedKmh: number): string {
+  if (speedKmh >= 70) return '🌪️'
+  if (speedKmh >= 45) return '💨'
+  if (speedKmh >= 15) return '🍃'
+  return '🌬️'
+}
+
+function getHumidityEmoji(humidity: number): string {
+  if (humidity >= 80) return '💧'
+  if (humidity >= 50) return '💦'
+  if (humidity >= 30) return '🌫️'
+  return '🌵'
+}
+
 function buildPracticalSignals(snapshot: WeatherSnapshot): PracticalSignal[] {
   const signals: PracticalSignal[] = []
 
   if (snapshot.precipitationMm > 0) {
     const intensity = snapshot.precipitationMm >= 10 ? 'Steady showers soak the paths.' : 'Light drizzles patter through the glens.'
     signals.push({
-      label: 'Precipitation',
-      value: `${snapshot.precipitationMm.toFixed(1)} mm rainfall`,
+      label: 'Precipitation 💧',
+      value: `${snapshot.precipitationMm.toFixed(1)} mm rainfall ${snapshot.precipitationMm >= 8 ? '🌧️' : '🌦️'}`,
       note: intensity
     })
   } else {
     signals.push({
-      label: 'Precipitation',
-      value: 'No rainfall today.',
+      label: 'Precipitation 💧',
+      value: 'No rainfall today. ☀️',
       note: 'Ground remains firm beneath your boots.'
     })
   }
 
   if (snapshot.snowDepthCm > 0) {
     signals.push({
-      label: 'Snow Depth',
+      label: 'Snow Depth ❄️',
       value: `${snapshot.snowDepthCm.toFixed(1)} cm`,
-      note: 'Fresh powder cloaks the trail.'
+      note: 'Fresh powder cloaks the trail. ❄️'
     })
   }
 
   const pressureNotes: Record<PressureTrend, string> = {
-    rising: 'Pressure rising — skies steadying.',
-    steady: 'Pressure steady — balance holds.',
-    falling: 'Pressure falling — storms brewing.'
+    rising: 'Pressure rising — skies steadying. 📈',
+    steady: 'Pressure steady — balance holds. ⚖️',
+    falling: 'Pressure falling — storms brewing. 📉'
   }
 
   signals.push({
-    label: 'Pressure',
+    label: 'Pressure 📊',
     value: `${snapshot.pressureHpa} hPa`,
     note: pressureNotes[snapshot.pressureTrend]
   })
 
   const visibilityNote = snapshot.visibilityKm < 2
-    ? 'Mist veils the horizon.'
+    ? 'Mist veils the horizon. 🌫️'
     : snapshot.visibilityKm < 5
-      ? 'Haze softens distant peaks.'
-      : 'Clear sightlines span the lochs.'
+      ? 'Haze softens distant peaks. 👁️'
+      : 'Clear sightlines span the lochs. 🔭'
 
   signals.push({
-    label: 'Visibility',
+    label: 'Visibility 👁️',
     value: `${snapshot.visibilityKm.toFixed(1)} km`,
     note: visibilityNote
   })
 
   const uv = snapshot.uvIndex
   const uvNote = uv >= 8
-    ? 'Sun at zenith — ward your skin.'
+    ? 'Sun at zenith — ward your skin. 🔥'
     : uv >= 6
-      ? 'Bright rays demand light armor.'
+      ? 'Bright rays demand light armor. 😎'
       : uv >= 3
-        ? 'Moderate glow — wards optional.'
-        : 'Soft winter sun peers through clouds.'
+        ? 'Moderate glow — wards optional. 🌞'
+        : 'Soft winter sun peers through clouds. 🌥️'
 
   signals.push({
-    label: 'UV Index',
+    label: 'UV Index ☀️',
     value: `${uv} / 11`,
     note: uvNote
   })
 
   signals.push({
-    label: 'Sun Cycle',
+    label: 'Sun Cycle 🌅',
     value: `Dawn ${snapshot.sunrise} · Dusk ${snapshot.sunset}`,
     note: describeSeasonalShift(snapshot.dayLengthDeltaMinutes)
   })
@@ -249,7 +282,7 @@ function deriveElementalAttunement(snapshot: WeatherSnapshot): ElementalInsight 
   if (snapshot.extremeColdWarning || snapshot.temperature <= 0 || snapshot.snowDepthCm > 0) {
     return {
       label: 'Elemental Attunement',
-      value: 'Frostbound',
+      value: 'Frostbound ❄️',
       note: 'Cold anchors the day — conserve warmth and stamina.'
     }
   }
@@ -257,7 +290,7 @@ function deriveElementalAttunement(snapshot: WeatherSnapshot): ElementalInsight 
   if (snapshot.extremeHeatWarning || snapshot.uvIndex >= 7 || snapshot.temperature >= 28) {
     return {
       label: 'Elemental Attunement',
-      value: 'Solar Blaze',
+      value: 'Solar Blaze 🔥',
       note: 'Sunfire pulses strongly — hydration and shade advised.'
     }
   }
@@ -265,7 +298,7 @@ function deriveElementalAttunement(snapshot: WeatherSnapshot): ElementalInsight 
   if (snapshot.windSpeed >= 45) {
     return {
       label: 'Elemental Attunement',
-      value: 'Air Dominant',
+      value: 'Air Dominant 💨',
       note: 'Expect clarity and motion — winds lead today’s trial.'
     }
   }
@@ -273,14 +306,14 @@ function deriveElementalAttunement(snapshot: WeatherSnapshot): ElementalInsight 
   if (snapshot.precipitationMm >= 5 || snapshot.conditions.toLowerCase().includes('rain')) {
     return {
       label: 'Elemental Attunement',
-      value: 'Waterbound',
+      value: 'Waterbound 🌊',
       note: 'Moisture saturates the cycle — embrace fluid tactics.'
     }
   }
 
   return {
     label: 'Elemental Attunement',
-    value: 'Earth Steady',
+    value: 'Earth Steady 🪨',
     note: 'Balanced forces — steady footing and patience prevail.'
   }
 }
@@ -289,7 +322,7 @@ function deriveStormThreat(snapshot: WeatherSnapshot): ElementalInsight {
   if (snapshot.thunderPossible || snapshot.windSpeed >= 65) {
     return {
       label: 'Storm Threat',
-      value: 'Tempest',
+      value: 'Tempest ⚡',
       note: 'Thunderheads prowl nearby — secure shelters and wards.'
     }
   }
@@ -297,14 +330,14 @@ function deriveStormThreat(snapshot: WeatherSnapshot): ElementalInsight {
   if (snapshot.windSpeed >= 45 || snapshot.pressureTrend === 'falling' || snapshot.precipitationMm >= 8) {
     return {
       label: 'Storm Threat',
-      value: 'Brewing',
+      value: 'Brewing 🌩️',
       note: 'Barometer dips and gusts rise — brace for intensifying weather.'
     }
   }
 
   return {
     label: 'Storm Threat',
-    value: 'Calm',
+    value: 'Calm 🌈',
     note: 'Skies hold gentle equilibrium — minimal disruption expected.'
   }
 }
@@ -312,50 +345,51 @@ function deriveStormThreat(snapshot: WeatherSnapshot): ElementalInsight {
 function deriveSeasonalDrift(snapshot: WeatherSnapshot): ElementalInsight {
   const delta = snapshot.dayLengthDeltaMinutes
   const symbol = delta > 0 ? `+${delta}` : delta === 0 ? '±0' : `-${Math.abs(delta)}`
+  const seasonalEmoji = delta > 0 ? '🌱' : delta < 0 ? '🍂' : '⚖️'
   const note = delta > 0
-    ? 'Light lingers longer than the last cycle.'
+    ? 'Light lingers longer than the last cycle. 🌅'
     : delta < 0
-      ? 'Night encroaches, reclaiming minutes from the day.'
-      : 'Day length holds steady against the turning wheel.'
+      ? 'Night encroaches, reclaiming minutes from the day. 🌙'
+      : 'Day length holds steady against the turning wheel. ⚖️'
 
   return {
     label: 'Seasonal Drift',
-    value: `${symbol} min daylight shift`,
+    value: `${symbol} min daylight shift ${seasonalEmoji}`,
     note
   }
 }
 
 function describeSeasonalShift(deltaMinutes: number): string {
   if (deltaMinutes > 0) {
-    return `+${deltaMinutes} minutes of light gained since last cycle.`
+    return `+${deltaMinutes} minutes of light gained since last cycle. 🌅`
   }
 
   if (deltaMinutes < 0) {
-    return `${Math.abs(deltaMinutes)} minutes of light lost since last cycle.`
+    return `${Math.abs(deltaMinutes)} minutes of light lost since last cycle. 🌙`
   }
 
-  return 'Day length unchanged since the previous cycle.'
+  return 'Day length unchanged since the previous cycle. ⚖️'
 }
 
 function deriveRareEvents(snapshot: WeatherSnapshot): string[] {
   const events: string[] = []
 
   if (snapshot.thunderPossible) {
-    events.push('Thunderheads detected — lightning wards advised.')
+    events.push('Thunderheads detected — lightning wards advised. ⚡')
   }
 
   if (snapshot.extremeHeatWarning) {
-    events.push('Extreme heat warning — hydrate and seek shade.')
+    events.push('Extreme heat warning — hydrate and seek shade. 🔥')
   }
 
   if (snapshot.extremeColdWarning) {
-    events.push('Severe cold warning — bolster layers and rations.')
+    events.push('Severe cold warning — bolster layers and rations. 🥶')
   }
 
   if (snapshot.auroraPotential === 'high') {
-    events.push('High aurora potential — expect vivid celestial curtains.')
+    events.push('High aurora potential — expect vivid celestial curtains. 🌌')
   } else if (snapshot.auroraPotential === 'watch') {
-    events.push('Aurora watch in effect — sky may shimmer tonight.')
+    events.push('Aurora watch in effect — sky may shimmer tonight. 🌌')
   }
 
   return events
@@ -382,6 +416,11 @@ function App() {
   const practicalSignals = buildPracticalSignals(weatherSnapshot)
   const elementalInsights = deriveElementalInsights(weatherSnapshot)
   const rareEvents = deriveRareEvents(weatherSnapshot)
+  const temperatureEmoji = getTemperatureEmoji(weatherSnapshot.temperature)
+  const feelsLikeEmoji = getTemperatureEmoji(weatherSnapshot.feelsLike)
+  const conditionEmoji = getConditionEmoji(weatherSnapshot.conditions)
+  const windEmoji = getWindEmoji(weatherSnapshot.windSpeed)
+  const humidityEmoji = getHumidityEmoji(weatherSnapshot.humidity)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -453,26 +492,32 @@ function App() {
       <main className="board-stack">
         <section className="board-panel board-panel--report">
           <header className="board-panel__header">
-            <h2>Elemental Report</h2>
+            <h2>Elemental Report 🌍</h2>
           </header>
           <div className="weather-metric">
             <div className="weather-metric__value">
-              <span className="weather-metric__temp">{weatherSnapshot.temperature}°C</span>
-              <span className="weather-metric__detail">Feels like {weatherSnapshot.feelsLike}°C</span>
+              <span className="weather-metric__temp">{weatherSnapshot.temperature}°C {temperatureEmoji}</span>
+              <span className="weather-metric__detail">Feels like {weatherSnapshot.feelsLike}°C {feelsLikeEmoji}</span>
             </div>
             <div className="weather-metric__conditions">
               <span className="weather-metric__label">Conditions</span>
-              <strong>{weatherSnapshot.conditions}</strong>
+              <strong>
+                {weatherSnapshot.conditions} {conditionEmoji}
+              </strong>
             </div>
           </div>
           <dl className="weather-stats">
             <div>
               <dt>Wind</dt>
-              <dd>{windSpeedMs} m/s</dd>
+              <dd>
+                {windSpeedMs} m/s {windEmoji}
+              </dd>
             </div>
             <div>
               <dt>Humidity</dt>
-              <dd>{weatherSnapshot.humidity}%</dd>
+              <dd>
+                {weatherSnapshot.humidity}% {humidityEmoji}
+              </dd>
             </div>
           </dl>
           <div className="weather-secondary">
@@ -513,7 +558,7 @@ function App() {
               )}
             </section>
           </div>
-          <p className="weather-lore">{weatherSnapshot.atmosphericMood}</p>
+          <p className="weather-lore">{weatherSnapshot.atmosphericMood} {conditionEmoji}</p>
         </section>
 
         <section className="board-panel">
